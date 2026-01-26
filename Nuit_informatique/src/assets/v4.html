@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Disco Floor - 2D Expander Mode</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #050505;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+            font-family: sans-serif;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #start-btn {
+            position: absolute;
+            padding: 15px 30px;
+            font-size: 20px;
+            background: #FF0099;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            box-shadow: 0 0 15px #FF0099;
+            z-index: 10;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.3.2/pixi.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pixi-filters@latest/dist/browser/pixi-filters.min.js"></script>
+</head>
+
+<body>
+    <button id="start-btn">▶ Lancer music_disco2.mp3</button>
+    <script>
+        // --- CONFIGURATION ---
+        const CONFIG = {
+            gridWidth: 32,      
+            gridDepth: 6,       
+            tileSize: 25,       
+            gap: 4,             
+            kickThreshold: 0.98,
+            colors: {
+                base: 0x111122,
+                neonGreen: 0x39FF14,  // Niveau 1 (Bas)
+                cyberCyan: 0x00FFD5,  
+                laserBlue: 0x00C3FF,  
+                electricIndig: 0x6E0DD0, 
+                neonPurple: 0xB900FF, 
+                miamiPink: 0xFF0090,  // Niveau 6 (Haut)
+                flash: 0xFFFFFF 
+            }
+        };
+
+        // --- INIT PIXIJS ---
+        const app = new PIXI.Application({
+            width: window.innerWidth,
+            height: window.innerHeight,
+            backgroundColor: 0x050505,
+            resizeTo: window
+        });
+        document.body.appendChild(app.view);
+
+        // --- FILTRES (BLOOM) ---
+        let bloomFilter;
+        if (PIXI.filters && PIXI.filters.AdvancedBloomFilter) {
+            bloomFilter = new PIXI.filters.AdvancedBloomFilter({ threshold: 0.3, bloomScale: 1.5, blur: 6 });
+        } else {
+            bloomFilter = new PIXI.filters.BloomFilter(10);
+        }
+        app.stage.filters = [bloomFilter];
+
+        const floorContainer = new PIXI.Container();
+        app.stage.addChild(floorContainer);
+
+        // --- DESSIN TUILE 2D ---
+        function createSquareTileTexture() {
+            const g = new PIXI.Graphics();
+            const s = CONFIG.tileSize;
+            
+            g.beginFill(0xFFFFFF);
+            g.drawRect(0, 0, s, s);
+            g.endFill();
+            
+            g.lineStyle(1, 0x000000, 0.5);
+            g.drawRect(0, 0, s, s);
+
+            return app.renderer.generateTexture(g);
+        }
+
+        const tileTexture = createSquareTileTexture();
+        const tiles = [];
+
+        // --- CRÉATION GRILLE 2D ---
+        const totalWidth = CONFIG.gridWidth * (CONFIG.tileSize + CONFIG.gap);
+        const totalHeight = CONFIG.gridDepth * (CONFIG.tileSize + CONFIG.gap);
+
+        floorContainer.x = (app.screen.width - totalWidth) / 2;
+        floorContainer.y = (app.screen.height - totalHeight) / 2;
+
+        for (let col = 0; col < CONFIG.gridWidth; col++) {
+            tiles[col] = [];
+            for (let row = 0; row < CONFIG.gridDepth; row++) {
+                const tile = new PIXI.Sprite(tileTexture);
+                
+                tile.x = col * (CONFIG.tileSize + CONFIG.gap);
+                tile.y = row * (CONFIG.tileSize + CONFIG.gap);
+                tile.tint = CONFIG.colors.base;
+                
+                floorContainer.addChild(tile);
+                tiles[col][row] = tile;
+            }
+        }
+
+        // --- AUDIO ---
+        let analyser, dataArray, waveformArray, audioElement;
+        let isAudioActive = false;
+
+        function setupAudio() {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            audioElement = new Audio('music_disco2.mp3');
+            audioElement.crossOrigin = "anonymous";
+            audioElement.loop = true;
+            
+            const source = audioCtx.createMediaElementSource(audioElement);
+            analyser = audioCtx.createAnalyser();
+            source.connect(analyser);
+            analyser.connect(audioCtx.destination);
+            
+            analyser.fftSize = 256; 
+            dataArray = new Uint8Array(analyser.frequencyBinCount);
+            waveformArray = new Uint8Array(analyser.fftSize);
+
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            audioElement.play().then(() => {
+                isAudioActive = true;
+                document.getElementById('start-btn').style.display = 'none';
+            }).catch(err => alert("Erreur: " + err));
+        }
+
+        function getAvg(start, end) {
+            let sum = 0;
+            if (end > dataArray.length) end = dataArray.length;
+            for (let i = start; i < end; i++) sum += dataArray[i];
+            return (sum / (end - start)) / 255;
+        }
+
+        // --- BOUCLE PRINCIPALE ---
+        app.ticker.add(() => {
+            if (!isAudioActive) return;
+
+            analyser.getByteFrequencyData(dataArray);  
+            analyser.getByteTimeDomainData(waveformArray); 
+
+            const kickLevel = getAvg(0, 5);
+            const isHugeKick = kickLevel > CONFIG.kickThreshold;
+
+            for (let col = 0; col < CONFIG.gridWidth; col++) {
+                
+                // 1. Récupération
+                const waveIndex = Math.floor((col / CONFIG.gridWidth) * waveformArray.length);
+                const rawValue = waveformArray[waveIndex];
+                
+                // 2. Normalisation (0.0 à 1.0)
+                let normalized = Math.abs(rawValue - 128) / 128; 
+
+                // 3. Traitement du Signal (Mise au carré pour contraster)
+                // Cela écrase les bruits faibles et détache les pics
+                let curvedAmplitude = Math.pow(normalized, 3); 
+
+                // 4. Calcul hauteur (Gain boosté à 5.0 pour compenser le carré)
+                let barHeight = curvedAmplitude * CONFIG.gridDepth * 20.0;
+
+                for (let row = 0; row < CONFIG.gridDepth; row++) {
+                    const t = tiles[col][row];
+                    
+                    const distFromBottom = (CONFIG.gridDepth - 1) - row;
+
+                    // --- COULEURS ---
+                    if (distFromBottom < 1) t.tint = CONFIG.colors.neonGreen;       
+                    else if (distFromBottom < 2) t.tint = CONFIG.colors.cyberCyan;
+                    else if (distFromBottom < 3) t.tint = CONFIG.colors.laserBlue;
+                    else if (distFromBottom < 4) t.tint = CONFIG.colors.electricIndig;
+                    else if (distFromBottom < 5) t.tint = CONFIG.colors.neonPurple;
+                    else t.tint = CONFIG.colors.miamiPink;                          
+
+                    // --- ANIMATION ---
+                    if (isHugeKick) {
+                        t.alpha = 0.8;
+                        t.tint = CONFIG.colors.flash; 
+                    } else {
+                        // Détermination de la cible (Allumé ou Eteint)
+                        let targetAlpha = 0.1; // Eteint par défaut (lueur de fond)
+                        
+                        if (distFromBottom < barHeight) {
+                            targetAlpha = 0.9; // Allumé
+                        }
+
+                        // LISSAGE (Lerp)
+                        if (targetAlpha > t.alpha) {
+                            // ATTAQUE : Rapide (0.3) pour suivre le rythme
+                            t.alpha += (targetAlpha - t.alpha) * 0.3; 
+                        } else {
+                            // RELÂCHEMENT : Lent (0.05) pour une belle traînée fluide
+                            t.alpha += (targetAlpha - t.alpha) * 0.05; 
+                        }
+                    }
+                }
+            }
+        });
+
+        document.getElementById('start-btn').addEventListener('click', setupAudio);
+    </script>
+</body>
+
+</html>">

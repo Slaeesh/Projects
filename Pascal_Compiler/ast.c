@@ -1,3 +1,7 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h> // Nécessaire pour strdup
+
 #include "ast.h"
 
 /**
@@ -64,11 +68,12 @@ ASTNode* init_ast_leaf_var(Token token) {
     if (token.value != NULL) {
         node -> string_value = strdup(token.value);
     } else {
-        node -> string_value = ''; // Peut être changer à null 
+        node -> string_value = ""; // Peut être changer à null 
     }
+    return node;
 }
 
-free_ast(ASTNode* node) {
+void free_ast(ASTNode* node) {
     if (node == NULL) {
         return;
     }

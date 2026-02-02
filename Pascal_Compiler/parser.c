@@ -39,6 +39,60 @@ void parser_eat(Parser* parser, TokenType type) {
         }
     }
 }
+
+void parser_free(Parser* parser) {
+
+}
+
+ASTNode* parser_run(TokenList* list) {
+    //Initialiser le parser
+    Parser* parser = parser_init(list);
+    //Parser le programme
+    noeud_racine = ParserProgramme(parser);
+    //Vérifie EOF
+    if (list->currentToken->type != TOK_EOF) {
+        parser_error(parser, "Pas de TOken EOF");
+    }
+    //Free le parser
+    parser_free(parser);
+
+    return noeud_racine;
+    
+}
+
+ASTNode* parser_parseWrite(Parser* parser) {
+    Token tok_save = parser -> currentToken
+    parser_eat(parser, TOK_WRITE); // eat le write
+    parser_eat(parser, TOK_LPAREN); //eat (
+
+    ASTNode* expr = parser_parseExpression(parser); //parse de la première expression
+
+    ASTNode* node = init_ast_node(AST_WRITE, expr, NULL, tok_save)
+    ASTNode* current = node;
+
+    while(parser->currentToken.type == TOK_COMMA) {
+        parser_eat(parser, TOK_COMMA);
+
+        ASTNode* next_expr = parser_parseExpression(parser);
+        ASTNode* next_node = init_ast_node(AST_WRITE, next_expr, NULL, tok_save);
+        current->right = next_node
+        current = next_node
+    }
+
+    parser_eat(parser, TOK_RPAREN);
+    return node;
+}
+
+void parser_parseType(Parser* parser) {
+    if (parser->currentToken->type = TOK_INTEGER) {
+        parser_eat(parser, TOK_INTEGER)
+    } else {
+        parser_error(parser, "Pas le type attendu (Integer)")
+    }
+}
+
+
+
 /*
 ALGORITHME : PARSEUR_PASCAL_COMPLET
 
@@ -56,7 +110,7 @@ VARIABLES GLOBALES :
     FIN SI
 FIN FONCTION
 
-// Main de l'algo
+// Entrée du programme
 
 FONCTION ParserProgramme() RETOURNE NœudAST
     // Règle : PROGRAM id ; Bloc .

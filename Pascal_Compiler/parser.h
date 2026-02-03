@@ -82,9 +82,6 @@ ASTNode* parser_parseFactor(Parser* parser);
 // ====================== Début ====================
 // Point d'entrée : Analyse PROGRAM ... END.
 ASTNode* parser_parseProgram(Parser* parser);
-
-// Analyse la section VAR ... ;
-ASTNode* parser_parseVarDeclarations(Parser* parser); 
 // ====================== Fin Début ====================
 
 
@@ -94,6 +91,9 @@ ASTNode* parser_parseVarDeclarations(Parser* parser);
 
 
 // ====================== Instructions ====================
+// Analyse la section VAR ... ;
+ASTNode* parser_parseVarDeclarations(Parser* parser); 
+
 // Analyse un bloc d'instructions (souvent entre BEGIN et END)
 ASTNode* parser_parseBlock(Parser* parser);
 

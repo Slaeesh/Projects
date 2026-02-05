@@ -18,15 +18,17 @@ typedef enum {
     TOK_THEN,      
     TOK_ELSE,       
     TOK_WHILE,     
-    TOK_DO,          
-    TOK_INTEGER,   
-    TOK_WRITE,       
+    TOK_DO,             
+    TOK_WRITE, 
 
-    // --- Données variables ---
+    // Type de variable. Pour le moment entier uniquement
+    TOK_INTEGER,
+
+    //  Données variables
     TOK_ID,          // Variable (ex: "maVariable", "x", "compteur").Pour le moment les variables ne peuvent pas contenir de _.
     TOK_NUMBER,      // Integer only (ex: "42", "100")
 
-    // --- Symboles et Opérateurs ---
+    // Symboles et Opérateurs
     TOK_ASSIGN,      // ":=" (Affectation)
     TOK_COLON,       // ":"  (Deux-points)
     TOK_SEMI,        // ";"  (Point-virgule)

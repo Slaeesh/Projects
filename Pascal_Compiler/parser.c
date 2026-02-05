@@ -158,7 +158,6 @@ ASTNode* parser_parseProgram(Parser* parser) {
     return prog_node;
 }
 
-
 ASTNode* parser_parseBlock(Parser* parser) {
     Token tok_save = parser -> currentToken;
     parser_eat(parser, TOK_BEGIN);
@@ -177,20 +176,86 @@ ASTNode* parser_parseBlock(Parser* parser) {
         parser_eat(parser, TOK_SEMI);
 
         ASTNode* next_stmt = parser_parseStatement(parser);
-        ASTNode* next_node = init_ast_node(AST_COMPOUND, next_stmt, NULL, tok_save=;
+        ASTNode* next_node = init_ast_node(AST_COMPOUND, next_stmt, NULL, tok_save);
         current-> right= next_node;
         current = next_node;
     }
 
     parser_eat(parser, TOK_END);
+}
 
 
+ASTNode* parser_parseVarDeclarations(Parser* parser) {
+    parser_eat(parser, TOK_VAR);
 
+    ASTNode* root = NULL;    // La tête de la liste (le premier noeud)
+    ASTNode* current = NULL; // Le curseur (le dernier noeud ajouté)
+
+    // Cela permet de gérer plusieurs lignes :
+    //    x : INTEGER;
+    //    y : INTEGER;
+    while (parser->currentToken.type == TOK_ID) {
+        
+        // On récupère le nom des variables
+        Token ids[100]; // Tableau temporaire pour stocker les tokens (max 100 vars par ligne)
+        int count = 0;
+
+        // On prend le premier nom (il existe)
+        ids[count++] = parser->currentToken;
+        parser_eat(parser, TOK_ID);
+
+        // On regarde s'il y en a d'autres séparés par des virgules
+        while (parser->currentToken.type == TOK_COMMA) {
+            parser_eat(parser, TOK_COMMA); 
+            
+            if (parser->currentToken.type == TOK_ID) {
+                ids[count++] = parser->currentToken;
+                parser_eat(parser, TOK_ID);
+            } else {
+                parser_error(parser, "Identifiant attendu après la virgule");
+            }
+        }
+
+        // Gestion du Type
+        parser_eat(parser, TOK_COLON);
+
+        // On sauvegarde le token
+        Token type_token = parser->currentToken; 
+        
+        // On vérifie que le type est valide et on le consomme
+        parser_parseType(parser); 
+
+        parser_eat(parser, TOK_SEMI); 
+
+        // Création et Chaînage des Noeuds
+        // Pour chaque variable trouvée sur cette ligne...
+        for (int i = 0; i < count; i++) {
+            // Création du noeud VAR_DECL
+            // On utilise le token sauvegardé (ids[i]) qui contient le nom "x", ligne 5, etc.
+            ASTNode* node = init_ast_node(AST_VAR_DECL, NULL, NULL, ids[i]);
+
+            // Si c'est le tout premier noeud de la section VAR
+            if (root == NULL) {
+                root = node;
+            } else {
+                // Sinon, on l'accroche à la suite du précédent
+                current->right = node;
+            }
+            
+            // On déplace le curseur sur le nouveau noeud
+            current = node;
+        }
+    }
+
+    return root;
 }
 
 
 
 
+ASTNode* parser_parseStatement(Parser* parser) {
+
+}
 
 
 

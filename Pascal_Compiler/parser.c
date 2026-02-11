@@ -251,10 +251,44 @@ ASTNode* parser_parseVarDeclarations(Parser* parser) {
 }
 
 
-
-
 ASTNode* parser_parseStatement(Parser* parser) {
+    TokenType type = parser->currentToken.type;
 
+    switch (type)
+    {
+    case TOK_IF:
+        return parser_parseIf(parser);
+
+    case TOK_WHILE:
+        return parser_parseWhile(parser);
+
+    case TOK_ASSIGN:
+        return parser_parseAssignment(parser);
+    
+    case TOK_WRITE:
+        return parser_parseWrite(parser);
+
+    }
+
+    return init_ast_node(AST_NOOP, NULL, NULL, parser->currentToken); //robustesse
+}
+
+
+
+
+
+ASTNode* parser_parseIf(Parser* parser) {
+    Token tok_if = parser -> currentToken;
+    parser_eat(parser, TOK_IF);
+
+    //On analyse la condition 
+    parser_parseExpression(parser);
+
+    //Analyse du then
+    parser_eat(parser, TOK_THEN);
+
+    //Bloc IF
+    parser_parseBlock(parser);
 }
 
 

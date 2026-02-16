@@ -23,6 +23,7 @@ typedef enum {
 
     // Type de variable. Pour le moment entier uniquement
     TOK_INTEGER,
+    TOK_REAL,        // A FAIRE PLUS TARD
 
     //  Données variables
     TOK_ID,          // Variable (ex: "maVariable", "x", "compteur").Pour le moment les variables ne peuvent pas contenir de _.

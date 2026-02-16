@@ -160,7 +160,7 @@ ASTNode* parser_parseProgram(Parser* parser) {
 
     parser_eat(parser, TOK_DOT);
 
-    ASTNode* prog_node = init_ast_node(AST_PROGRAM, var_node,bloc_node, tok_save);
+    ASTNode* prog_node = init_ast_node(AST_PROGRAM, var_node,bloc_node, tok_save); // gauche: section var, droite: bloc principal
     return prog_node;
 }
 
@@ -205,7 +205,7 @@ ASTNode* parser_parseVarDeclarations(Parser* parser) {
     while (parser->currentToken.type == TOK_ID) {
         
         // On récupère le nom des variables
-        Token ids[100]; // Tableau temporaire pour stocker les tokens (max 100 vars par ligne)
+        Token ids[100]; // Tableau temporaire pour stocker les tokens (max 100 vars par ligne). On changera plus tard pour faire du dynamique si besoin.
         int count = 0;
 
         // On prend le premier nom (il existe)
@@ -236,10 +236,10 @@ ASTNode* parser_parseVarDeclarations(Parser* parser) {
         parser_eat(parser, TOK_SEMI); 
 
         // Création et Chaînage des Noeuds
-        // Pour chaque variable trouvée sur cette ligne...
+        // Pour chaque variable trouvée sur cette ligne
         for (int i = 0; i < count; i++) {
             // Création du noeud VAR_DECL
-            // On utilise le token sauvegardé (ids[i]) qui contient le nom "x", ligne 5, etc.
+            // On utilise le token sauvegardé (ids[i])
             ASTNode* node = init_ast_node(AST_VAR_DECL, NULL, NULL, ids[i]);
 
             // Si c'est le tout premier noeud de la section VAR
@@ -254,7 +254,6 @@ ASTNode* parser_parseVarDeclarations(Parser* parser) {
             current = node;
         }
     }
-
     return root;
 }
 

@@ -7,7 +7,7 @@
 typedef enum {
     // General Structure
     AST_PROGRAM,      // La racine (contient les variables + le bloc principal)
-    AST_VAR_DECLS,    // Une liste de déclarations de variables
+    //AST_VAR_DECLS,    // Une liste de déclarations de variables
     AST_VAR_DECL,     // Une déclaration spécifique (ex: x : INTEGER)
     AST_COMPOUND,     // Un bloc de code (BEGIN ... END)
 
@@ -22,6 +22,7 @@ typedef enum {
     // Expressions
     AST_BIN_OP,       // Opération binaire (+, -, *, /, >, <...)
     AST_INTEGER,      // Un nombre entier (feuille de l'arbre)
+    AST_REAL,         // Un nombre réel (feuille de l'arbre) PAS ENCORE IMPLEMENTE MAIS A FAIRE
     AST_VARIABLE      // Une variable utilisée dans un calcul (feuille)
 } ASTNodeType;
 

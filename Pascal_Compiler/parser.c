@@ -16,6 +16,7 @@ Parser* parser_init(TokenList* tokens) {
     parser -> tokens = tokens;
     parser -> pos = 0;
     parser -> currentToken = tokens -> data[0];
+    return parser;
 }
 
 void parser_error(Parser* parser, const char* message) {
@@ -41,14 +42,16 @@ void parser_eat(Parser* parser, TokenType type) {
 }
 
 void parser_free(Parser* parser) {
-
+    if (parser != NULL) {
+        free(parser);
+    }
 }
 
 ASTNode* parser_run(TokenList* list) {
     //Initialiser le parser
     Parser* parser = parser_init(list);
     //Parser le programme
-    ASTNode* noeud_racine = ParserProgramme(parser);
+    ASTNode* noeud_racine = parser_parseProgram(parser);
     //Vérifie EOF
     if (parser->currentToken.type != TOK_EOF) {
         parser_error(parser, "Pas de TOken EOF");
@@ -127,6 +130,9 @@ ASTNode* parser_parseFactor(Parser* parser) {
         ASTNode* node = parser_parseExpression(parser);
         parser_eat(parser, TOK_RPAREN);
         return node;
+    } else {
+        parser_error(parser, "Facteur inattendu (Nombre, Variable ou Parenthèse)");
+        return NULL;
     }
     
 }
@@ -182,6 +188,8 @@ ASTNode* parser_parseBlock(Parser* parser) {
     }
 
     parser_eat(parser, TOK_END);
+
+    return root;
 }
 
 
@@ -262,11 +270,14 @@ ASTNode* parser_parseStatement(Parser* parser) {
     case TOK_WHILE:
         return parser_parseWhile(parser);
 
-    case TOK_ASSIGN:
+    case TOK_ID:
         return parser_parseAssignment(parser);
     
     case TOK_WRITE:
         return parser_parseWrite(parser);
+
+    case TOK_BEGIN:   // <--- AJOUT: Gestion des blocs imbriqués
+        return parser_parseBlock(parser);
 
     }
 
@@ -278,22 +289,55 @@ ASTNode* parser_parseStatement(Parser* parser) {
 
 
 ASTNode* parser_parseIf(Parser* parser) {
+
     Token tok_if = parser -> currentToken;
     parser_eat(parser, TOK_IF);
 
     //On analyse la condition 
-    parser_parseExpression(parser);
+    ASTNode* condition = parser_parseExpression(parser);
 
     //Analyse du then
     parser_eat(parser, TOK_THEN);
-
+    
     //Bloc IF
-    parser_parseBlock(parser);
+    // Attention, il faut utiliser parse_statement car si on utilise PARSE_BLOCK, on force l'utilisation de BEGIN et END. 
+    // Pour la V1, on utilisera parse_block et on changera plus tard.
+    ASTNode* then_branch = parser_parseBlock(parser);
+
+    ASTNode* else_branch = NULL;
+    // Cas s'il y a un ELSE
+    if(parser->currentToken.type == TOK_ELSE) {
+        parser_eat(parser, TOK_ELSE);
+        else_branch = parser_parseBlock(parser);
+    }
+
+    ASTNode* branches = init_ast_node(AST_COMPOUND, then_branch, else_branch, tok_if); // gauche:then, droite: else ou NULL
+    return init_ast_node(AST_IF, condition, branches, tok_if); // gauche: condition, droite: branches (then + else)
 }
 
+ASTNode* parser_parseAssignment(Parser* parser) {
+    Token tok_var = parser->currentToken;
 
+    parser_eat(parser, TOK_ID);
+    parser_eat(parser, TOK_ASSIGN);
 
+    ASTNode* expr = parser_parseExpression(parser); //Analyse de l'expression à droite du :=
+    ASTNode* var_node = init_ast_leaf_var(tok_var); //Création du noeud variable (feuille)
+    return init_ast_node(AST_ASSIGN, var_node, expr, tok_var); //Création 
+}   
 
+ASTNode* parser_parseWhile(Parser* parser) {
+    Token tok_while = parser-> currentToken;
+    parser_eat(parser, TOK_WHILE);
+    
+    ASTNode* condition = parser_parseExpression(parser);
+
+    parser_eat(parser, TOK_DO);
+
+    ASTNode* bloc = parser_parseBlock(parser);
+
+    return init_ast_node(AST_WHILE, condition, bloc, tok_while);
+}
 
 ASTNode* parser_parseWrite(Parser* parser) {
     Token tok_save = parser -> currentToken;
@@ -319,7 +363,7 @@ ASTNode* parser_parseWrite(Parser* parser) {
 }
 
 void parser_parseType(Parser* parser) {
-    if (parser->currentToken.type = TOK_INTEGER) {
+    if (parser->currentToken.type == TOK_INTEGER) {
         parser_eat(parser, TOK_INTEGER);
     } else {
         parser_error(parser, "Pas le type attendu (Integer)");

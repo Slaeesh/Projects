@@ -85,10 +85,10 @@ TokenList* lexer_analyser(const char* source) {
         }
 
         // Cas pour les lettres
-        if (isalpha(c)) {
+        if (isalpha(c) || c == '_') {
             int start = i;
             // On avance tant que c'est lettre ou chiffre
-            while (isalnum(source[i])) { 
+            while (source[i] != '\0' && (isalnum(source[i]) || source[i] == '_')) { 
                 i++; 
             }
             

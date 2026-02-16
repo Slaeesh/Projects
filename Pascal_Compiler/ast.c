@@ -30,7 +30,7 @@ ASTNode* create_node_base(ASTNodeType type, Token token) {
     // Initialisation des valeurs
     node->int_value = 0;
     node->string_value = NULL;
-    node->op = NULL; 
+    node->op = TOK_NULL; 
 
     return node;
 }
@@ -54,9 +54,9 @@ ASTNode* init_ast_leaf_int(Token token) {
     ASTNode* node = create_node_base(AST_INTEGER, token);
 
     if (token.value != NULL) {
-        node ->  string_value = atoi(token.value);
+        node ->  int_value = atoi(token.value);
     } else {
-        node -> string_value = 0; // Peut être changer à null car si un + avec rien derrière  -> erreur
+        node -> int_value = 0; // Peut être changer à null car si un + avec rien derrière  -> erreur
     }
 
     return node;
@@ -68,7 +68,7 @@ ASTNode* init_ast_leaf_var(Token token) {
     if (token.value != NULL) {
         node -> string_value = strdup(token.value);
     } else {
-        node -> string_value = ""; // Peut être changer à null 
+        node -> string_value = NULL; 
     }
     return node;
 }
@@ -89,4 +89,79 @@ void free_ast(ASTNode* node) {
     }
 
     free(node);
+}
+
+void print_ast(ASTNode* node, int level) {
+    // Gestion de l'indentation
+    for (int i = 0; i < level; i++) printf(i == level - 1 ? "|-- " : "|   ");
+
+    // Gestion du NULL
+    if (node == NULL) {
+        printf("(NULL)\n");
+        return;
+    }
+
+    // Affichage des informations du noeud
+    switch (node->type) {
+        case AST_PROGRAM:   printf("PROGRAM\n"); break;
+        case AST_VAR_DECLS: printf("VAR_DECLS\n"); break;
+        case AST_COMPOUND:  printf("BLOCK (BEGIN..END)\n"); break;
+        case AST_ASSIGN:    printf("ASSIGN (:=)\n"); break;
+        case AST_WHILE:     printf("WHILE\n"); break;
+        case AST_WRITE:     printf("WRITE\n"); break;
+        case AST_NOOP:      printf("NOOP\n"); break;
+
+        case AST_VAR_DECL:
+            printf("DECL: %s (Type: %s)\n", 
+                   node->token.value, 
+                   node->string_value ? node->string_value : "Integer");
+            break;
+
+        case AST_INTEGER:
+            printf("INTEGER: %d\n", node->int_value);
+            // C'est une feuille, on arrête la récursion ici
+            return; 
+
+        case AST_VARIABLE:
+            printf("VARIABLE: %s\n", node->string_value);
+            // C'est une feuille, on arrête la récursion ici
+            return;
+
+        case AST_BIN_OP:
+            printf("OP: ");
+            // Conversion "inline" des opérateurs pour éviter une fonction externe
+            switch(node->op) {
+                case TOK_PLUS: printf("+"); break;
+                case TOK_MINUS: printf("-"); break;
+                case TOK_MULT: printf("*"); break;
+                case TOK_DIV: printf("/"); break;
+                case TOK_EQ: printf("="); break;
+                case TOK_LT: printf("<"); break;
+                case TOK_GT: printf(">"); break;
+                default: printf("?"); break;
+            }
+            printf("\n");
+            break;
+
+        case AST_IF:
+            printf("IF\n");
+            // Traitement spécifique pour IF afin d'inclure le ELSE
+            print_ast(node->left, level + 1);       // Condition
+            print_ast(node->right, level + 1);      // Then
+            if (node->else_branch) {                // Else (optionnel)
+                for (int i = 0; i < level+1; i++) printf(i == level ? "|-- " : "|   ");
+                printf("[ELSE]\n");
+                print_ast(node->else_branch, level + 2);
+            }
+            return; // On a géré la récursion manuellement pour le IF
+
+        default:
+            printf("UNKNOWN [%d]\n", node->type);
+            break;
+    }
+
+    // Récursion standard (Gauche / Droite)
+    // On affiche NULL si l'enfant n'existe pas
+    print_ast(node->left, level + 1);
+    print_ast(node->right, level + 1);
 }

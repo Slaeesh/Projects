@@ -42,7 +42,10 @@ typedef enum {
     TOK_DIV,         // "/"
     TOK_EQ,          // "="  
     TOK_LT,          // "<"  
-    TOK_GT           // ">" 
+    TOK_GT,           // ">" 
+
+    //
+    TOK_NULL        // Token spécial pour les noeuds AST qui n'ont pas de token associé
 
 } TokenType;
 

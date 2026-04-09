@@ -1,3 +1,4 @@
+//gcc test_lexer.c lexer.c -o test_lexer
 #include <stdio.h>
 #include <stdlib.h>
 #include "lexer.h"

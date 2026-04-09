@@ -227,11 +227,7 @@ ASTNode* parser_parseVarDeclarations(Parser* parser) {
         // Gestion du Type
         parser_eat(parser, TOK_COLON);
 
-        // On sauvegarde le token
-        Token type_token = parser->currentToken; 
-        
-        // On vérifie que le type est valide et on le consomme
-        parser_parseType(parser); 
+        TokenType type_variable = parser_parseType(parser);
 
         parser_eat(parser, TOK_SEMI); 
 
@@ -241,6 +237,8 @@ ASTNode* parser_parseVarDeclarations(Parser* parser) {
             // Création du noeud VAR_DECL
             // On utilise le token sauvegardé (ids[i])
             ASTNode* node = init_ast_node(AST_VAR_DECL, NULL, NULL, ids[i]);
+
+            node->op = type_variable;
 
             // Si c'est le tout premier noeud de la section VAR
             if (root == NULL) {
@@ -310,7 +308,7 @@ ASTNode* parser_parseIf(Parser* parser) {
         else_branch = parser_parseBlock(parser);
     }
 
-    ASTNode* branches = init_ast_node(AST_COMPOUND, then_branch, else_branch, tok_if); // gauche:then, droite: else ou NULL
+    ASTNode* branches = init_ast_node(AST_Glue_IF, then_branch, else_branch, tok_if); // gauche:then, droite: else ou NULL
     return init_ast_node(AST_IF, condition, branches, tok_if); // gauche: condition, droite: branches (then + else)
 }
 
@@ -361,10 +359,12 @@ ASTNode* parser_parseWrite(Parser* parser) {
     return node;
 }
 
-void parser_parseType(Parser* parser) {
+TokenType parser_parseType(Parser* parser) {
     if (parser->currentToken.type == TOK_INTEGER) {
         parser_eat(parser, TOK_INTEGER);
+        return TOK_INTEGER; 
     } else {
         parser_error(parser, "Pas le type attendu (Integer)");
+        return TOK_ERROR; 
     }
 }

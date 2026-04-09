@@ -6,7 +6,7 @@
 #include "symbol_table.h"
 
 
-SymbolTable* symtable_init() {
+SymbolTable* st_init() {
     SymbolTable* st = (SymbolTable*)malloc(sizeof(SymbolTable));
 
     if  (st == NULL) {

@@ -14,7 +14,7 @@ typedef enum {
     // Instructions
     AST_ASSIGN,       // Affectation (x := 5)
     AST_IF,           // Condition (IF ... THEN ... ELSE)
-    AST_Glue_IF,         // Pour stocker un IF en entier, il faut 3 choses: condition, then et else. On utilise un noeud GLUE pour les coller ensemble.
+    AST_Glue_IF,         // Pour stocker un IF en entier, il faut 3 choses: condition, then et else. On utilise un noeud GLUE pour les coller ensemble. S'occupe du bloc IF et du else
     AST_WHILE,        // Boucle (WHILE ... DO)
     AST_WRITE,        // Affichage (WRITE)
     AST_NOOP,         // Instruction vide (No Operation)

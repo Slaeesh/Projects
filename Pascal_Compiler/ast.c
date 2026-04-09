@@ -104,7 +104,7 @@ void print_ast(ASTNode* node, int level) {
     // Affichage des informations du noeud
     switch (node->type) {
         case AST_PROGRAM:   printf("PROGRAM\n"); break;
-        case AST_VAR_DECLS: printf("VAR_DECLS\n"); break;
+        //case AST_VAR_DECLS: printf("VAR_DECLS\n"); break; // On a plus besoin de ce noeud, on gère les déclarations de variables directement avec AST_VAR_DECL
         case AST_COMPOUND:  printf("BLOCK (BEGIN..END)\n"); break;
         case AST_ASSIGN:    printf("ASSIGN (:=)\n"); break;
         case AST_WHILE:     printf("WHILE\n"); break;

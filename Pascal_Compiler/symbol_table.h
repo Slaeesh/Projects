@@ -20,7 +20,7 @@ typedef struct SymbolTable {
 
 SymbolTable* st_init();
 int st_add(SymbolTable* st, char* name, TokenType type); // Retourne 0 si succès, -1 si déjà existe
-Symbol* st_lookup(SymbolTable* st, char* name);          // Retourne le symbole ou NULL
+Symbol* st_lookup(SymbolTable* st, const char* name);          // Retourne le symbole ou NULL
 void st_free(SymbolTable* st);
 
 #endif

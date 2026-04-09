@@ -24,6 +24,7 @@ typedef enum {
     // Type de variable. Pour le moment entier uniquement
     TOK_INTEGER,
     TOK_REAL,        // A FAIRE PLUS TARD
+    TOK_BOOL,        // A FAIRE PLUS TARD
 
     //  Données variables
     TOK_ID,          // Variable (ex: "maVariable", "x", "compteur").Pour le moment les variables ne peuvent pas contenir de _.
@@ -44,6 +45,9 @@ typedef enum {
     TOK_EQ,          // "="  
     TOK_LT,          // "<"  
     TOK_GT,           // ">" 
+    //TOk_LEQ,         // "<=" A FAIRE PLUS TARD
+    //TOK_GEQ,         // ">=" A FAIRE PLUS TARD
+    //TOK_NEQ,         // "!=" A FAIRE PLUS TARD
 
     //
     TOK_NULL        // Token spécial pour les noeuds AST qui n'ont pas de token associé

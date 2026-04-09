@@ -105,7 +105,7 @@ ASTNode* parser_parseAssignment(Parser* parser); // x := ...
 ASTNode* parser_parseIf(Parser* parser);         // IF ... THEN ... ELSE
 ASTNode* parser_parseWhile(Parser* parser);      // WHILE ... DO ...
 ASTNode* parser_parseWrite(Parser* parser);      // WRITE(...)
-void parser_parseType(Parser* parser);          // Vérifie qu'on a bien un type (ex: INTEGER) et consomme le token. Si on veut rajouter des types, c'est ici
+TokenType parser_parseType(Parser* parser);          // Vérifie qu'on a bien un type (ex: INTEGER) et consomme le token. Si on veut rajouter des types, c'est ici
 // ====================== Fin Instructions ====================
 
 #endif // PARSER_H
